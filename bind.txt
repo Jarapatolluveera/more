@@ -1,0 +1,149 @@
+1.install bind package
+  yum install bind* -y
+2./etc/named.conf is the configuration file.
+   port number : 53, udp
+3.Samples can be found in /usr/share/doc/bind/sample directory (such as zone files etc., )
+4.Edit /etc/named.conf file (sample is copied in the shared dirctory)
+  [root@nikhilesh tmp]# cat named.conf
+//
+// named.conf
+//
+// Provided by Red Hat bind package to configure the ISC BIND named(8) DNS
+// server as a caching only nameserver (as a localhost DNS resolver only).
+//
+// See /usr/share/doc/bind*/sample/ for example named configuration files.
+//
+
+options {
+        listen-on port 53 { 127.0.0.1; 192.168.1.63; };
+        listen-on-v6 port 53 { ::1; };
+        directory       "/var/named";
+        dump-file       "/var/named/data/cache_dump.db";
+        statistics-file "/var/named/data/named_stats.txt";
+        memstatistics-file "/var/named/data/named_mem_stats.txt";
+        secroots-file   "/var/named/data/named.secroots";
+        recursing-file  "/var/named/data/named.recursing";
+        allow-query     { localhost; 192.168.0.0/16; };
+
+        /*
+         - If you are building an AUTHORITATIVE DNS server, do NOT enable recursion.
+         - If you are building a RECURSIVE (caching) DNS server, you need to enable
+           recursion.
+         - If your recursive DNS server has a public IP address, you MUST enable access
+           control to limit queries to your legitimate users. Failing to do so will
+           cause your server to become part of large scale DNS amplification
+           attacks. Implementing BCP38 within your network would greatly
+           reduce such attack surface
+        */
+        recursion yes;
+
+        dnssec-enable yes;
+        dnssec-validation yes;
+
+        managed-keys-directory "/var/named/dynamic";
+
+        pid-file "/run/named/named.pid";
+        session-keyfile "/run/named/session.key";
+
+        /* https://fedoraproject.org/wiki/Changes/CryptoPolicy */
+        include "/etc/crypto-policies/back-ends/bind.config";
+};
+
+logging {
+        channel default_debug {
+                file "data/named.run";
+                severity dynamic;
+        };
+};
+
+zone "." IN {
+        type hint;
+        file "named.ca";
+};
+zone "alclabs.in" IN {
+        type master;
+        file "forward.alclabs.in";
+        allow-update {none;};
+};
+zone "168.192.in-addr.arpa" IN {
+        type master;
+        file "reverse.alclabs.in";
+        allow-update {none;};
+};
+include "/etc/named.rfc1912.zones";
+include "/etc/named.root.key";
+
+[root@nikhilesh tmp]# cat reverse.alclabs.in
+$TTL 1D
+@       IN SOA  @ nikhilesh.alclabs.in. (
+                                        54311569       ; serial
+                                        1D      ; refresh
+                                        1H      ; retry
+                                        1W      ; expire
+                                        3H )    ; minimum
+@       IN      NS      nikhilesh.alclabs.in.
+@       IN      PTR     alclabs.in.
+50.1    IN      PTR     mounika.alclabs.in.
+51.1    IN      PTR     anil.alclabs.in.
+52.1    IN      PTR     bhargavi.alclabs.in.
+53.1    IN      PTR     bhavya.alclabs.in.
+54.1    IN      PTR     chinna.alclabs.in.
+55.1    IN      PTR     craja.alclabs.in.
+56.1    IN      PTR     dlavanya.alclabs.in.
+57.1    IN      PTR     gagan.alclabs.in.
+58.1    IN      PTR     ganesh.alclabs.in.
+59.1    IN      PTR     gopalkrishna.alclabs.in.
+60.1    IN      PTR     kvarun.alclabs.in.
+61.1    IN      PTR     bganesh.alclabs.in.
+62.1    IN      PTR     manashvini.alclabs.in.
+63.1    IN      PTR     nikhilesh.alclabs.in.
+64.1    IN      PTR     pavan.alclabs.in.
+65.1    IN      PTR     pavani.alclabs.in.
+66.1    IN      PTR     prem.alclabs.in.
+67.1    IN      PTR     prasanthv.alclabs.in.
+68.1    IN      PTR     rpuneeth.alclabs.in.
+69.1    IN      PTR     sai.alclabs.in.
+70.1    IN      PTR     sainath.alclabs.in.
+71.1    IN      PTR     santosh.alclabs.in.
+72.1    IN      PTR     sarika.alclabs.in.
+73.1    IN      PTR     shilpa.alclabs.in.
+74.1    IN      PTR     skrishna.alclabs.in.
+75.1    IN      PTR     slohith.alclabs.in.
+76.1    IN      PTR     sreelakshmi.alclabs.in.
+77.1    IN      PTR     suresh.alclabs.in.
+78.1    IN      PTR     varun.alclabs.in.
+79.1    IN      PTR     veera.alclabs.in.
+80.1    IN      PTR     venu.alclabs.in.
+81.1    IN      PTR     vishal.alclabs.in.
+82.1    IN      PTR     vlavanya.alclabs.in.
+83.1    IN      PTR     vtirumalesh.alclabs.in.
+84.1    IN      PTR     arvishal.alclabs.in.
+85.1    IN      PTR     praveen.alclabs.in.
+86.1    IN      PTR     mani.alclabs.in.
+87.1    IN      PTR     giridhar.alclabs.in.
+88.1    IN      PTR     srinivas.alclabs.in.
+89.1    IN      PTR     amarendra.alclabs.in.
+90.1    IN      PTR     sireesha.alclabs.in.
+91.1    IN      PTR     abhilash.alclabs.in.
+92.1    IN      PTR     supraja.alclabs.in.
+93.1    IN      PTR     nuthnasree.alclabs.in.
+94.1    IN      PTR     divya.alclabs.in.
+95.1    IN      PTR     vasudeva.alclabs.in.
+96.1    IN      PTR     bharathi.alclabs.in.
+97.1    IN      PTR     nagendra.alclabs.in.
+98.1    IN      PTR     sandeep.alclabs.in.
+99.1    IN      PTR     gopi.alclabs.in.
+
+
+10. In the client configure /etc/resolv.conf
+     vi /etc/resolv.conf
+      search alclabs.in
+      nameserver 192.168.1.63
+    If you are running RHEL7 or RHEL 8, then 
+    nmcli con mod Con-Name ipv4.dns DNSIP ipv4.dns-search "DomainName"
+    restart NetworkManager or ifup ens192 and ifdown ens192.
+    Now check /etc/resolv.conf where NetworkManager is automatically updated search domain and Name server details
+    Do not edit this file as it is under the control of NetworkManager.
+11. Check with nslookup or dig commands for name resolution.
+
+
